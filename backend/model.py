@@ -1,16 +1,18 @@
-from sqlalchemy import Column, Integer, String
-from database import Base
+from config import db
 
-class DataModel(Base):
+class MessageModel(db.Model):
     __tablename__ = "data_model"
-    id = Column(Integer, primary_key=True)
-    first_name = Column(String)
-    last_name = Column(String)
-    message = Column(String)
-    email = Column(String, unique=True)
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(80), unique=False, nullable=False)
+    last_name = db.Column(db.String(80), unique=False, nullable=False)
+    message = db.Column(db.String(240),unique=False, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
 
-    def __init__(self, first_name=None, last_name=None, message=None, email=None):
-        self.first_name = first_name
-        self.last_name = last_name
-        self.message = message
-        self.email = email
+    def to_json(self):
+        return {
+            "id" : self.id,
+            "firstName": self.first_name,
+            "lastName": self.last_name,
+            "message": self.message,
+            "email": self.email,
+        }

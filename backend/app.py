@@ -1,9 +1,6 @@
 from flask import Flask, request, jsonify
-from database import db_session  # Import the session
-from model import DataModel  # Import the model
-
-app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
+from config import app,db
+from model import MessageModel  # Import the model
 
 @app.route('/')
 def home():
@@ -14,21 +11,22 @@ def home():
 def create_entry():
     data = request.get_json()
 
-    dataModel = DataModel(**{key: data.get(key) for key in ["first_name", "last_name", "message", "email"]})
+    dataModel = MessageModel(**{key: data.get(key) for key in ["first_name", "last_name", "message", "email"]})
 
     try:
-        db_session.add(dataModel)
-        db_session.commit()
+        db.add(dataModel)
+        db.commit()
         return jsonify({"message": "Successfully created data entry!"}), 201
     except Exception as e: 
-        db_session.rollback()
+        db.rollback()
         return jsonify({"message": str(e)}), 500
 
 # Read
 @app.route("/retrieve_data", methods=["GET"])
 def retrieve_data():
-    data = request.get_json()
-    
+    messages = MessageModel.query.all()
+    json_data = list(map(lambda message: message.to_json(), messages))
+    return jsonify({"data": json_data})
 
 # Update
 @app.route("/update_data", methods=["PATCH"])
@@ -42,4 +40,6 @@ def delete_data():
 
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
