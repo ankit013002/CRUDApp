@@ -10,8 +10,8 @@ def home():
 @app.route("/create_data_entry", methods=["POST"])
 def create_entry():
     data = request.get_json()
-    first_name = data.get("first_name")
-    last_name = data.get("last_name")
+    first_name = data.get("firstName")
+    last_name = data.get("lastName")
     message = data.get("message")
     email = data.get("email")
 
@@ -37,15 +37,34 @@ def retrieve_data():
     return jsonify({"data": json_data})
 
 # Update
-@app.route("/update_data", methods=["PATCH"])
-def update_data():
-    pass
+@app.route("/update_data/<int:user_id>", methods=["PATCH"])
+def update_data(user_id):
+    message = MessageModel.query.get(user_id)
+
+    if not message:
+        return jsonify({"message": "User not found"}), 404
+
+    data = request.json
+    message.first_name = data.get("firstName", message.first_name)
+    message.last_name = data.get("lastName", message.last_name)
+    message.message = data.get("message", message.message)
+    message.email = data.get("email", message.email)
+
+    db.session.commit()
+    return jsonify({"mnessage": "Successfully updated user"}), 200
 
 # Delete
-@app.route("/delete_data", methods=["DELETE"])
-def delete_data():
-    pass
+@app.route("/delete_data/<int:user_id>", methods=["DELETE"])
+def delete_data(user_id):
+    message = MessageModel.query.get(user_id)
 
+    if not message:
+        return jsonify({"message": "User does not exist"}), 400
+
+    db.session.delete(message)
+    db.session.commit()
+
+    return jsonify({"message": "User successfully deleted"}), 200
 
 if __name__ == '__main__':
     with app.app_context():
